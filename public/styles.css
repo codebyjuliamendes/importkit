@@ -13,3 +13,12 @@ body{background-image:radial-gradient(ellipse at 94% 0%,#d9eeebaa,transparent 34
 .sidebar{box-shadow:8px 0 28px #1839390a}.welcome{border-radius:17px}
 .preview-panel,.panel{border-radius:15px;box-shadow:0 10px 34px #1b353708}
 .empty-preview{border:1px dashed #b5d2cf;border-radius:14px}
+
+/* Brand palette refresh — benchmarked for this product's own category */
+:root{--portfolio-accent:#286da5;--portfolio-soft:#e7f1fa;--portfolio-canvas:#f4f8fc;--green:#286da5;--bg:#f4f8fc;--line:#dce7f0}
+body{background-color:var(--portfolio-canvas)}
+.primary,.cta,.submit,.button.primary{background-color:var(--portfolio-accent)!important;color:#fff!important}
+.primary:hover,.cta:hover,.submit:hover,.button.primary:hover{filter:brightness(.93);box-shadow:0 8px 18px color-mix(in srgb,var(--portfolio-accent),transparent 78%)}
+.secondary,.ghost,.subtle{color:var(--portfolio-accent)}
+.rail-active,.nav.active,.sidebar .active,.brand-mark,.logo{--accent-color:var(--portfolio-accent)}
+.badge,.pill,.tag{--accent-color:var(--portfolio-accent)}
