@@ -1,6 +1,6 @@
 # ImportKit
 
-ImportKit is an embeddable CSV onboarding workflow for SaaS products. This demo validates contacts row by row, shows a preview, commits valid records, and can reverse a committed batch.
+ImportKit is an embeddable CSV onboarding workflow for SaaS products. Map external CSV headers to contact fields, validate rows, preview results, commit valid contacts, download an error report, and reverse a committed batch.
 
 ## Run locally
 
@@ -20,7 +20,7 @@ Open <http://localhost:3006>. The first run prepares a fictional sample preview.
 3. Commit valid rows. Invalid rows are never inserted.
 4. Use **Undo this import** to remove only records created by that batch.
 
-Required CSV headers are `name` and `email`; `company` is optional. The demo is capped at 800 KB per upload.
+Name and email are required; company is optional. The import dialog maps columns such as `Full Name`, `E-mail`, and `Organization` to those fields. The demo is capped at 800 KB per upload.
 
 ## Design notes
 
@@ -33,6 +33,7 @@ Required CSV headers are `name` and `email`; `company` is optional. The demo is 
 ## API
 
 - `GET /api/dashboard` — workspace metrics and recent imports.
+- `GET /api/imports/:id/errors.csv` — download invalid rows and their validation errors.
 - `GET /api/contacts` — imported contacts.
 - `POST /api/imports/preview` — validate CSV and save a reviewable preview.
 - `GET /api/imports/:id` — inspect row results.
