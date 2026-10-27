@@ -1,16 +1,69 @@
 name: CI
 on:
   push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
+    name: Lint, types and tests (Python ${{ matrix.python }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: astral-sh/setup-uv@v6
         with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm test
+          enable-cache: true
+          python-version: ${{ matrix.python }}
+      - run: uv sync --frozen
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy
+      - run: uv run pytest --cov=importkit --cov-report=term-missing --cov-report=xml
+      - name: Domain coverage gate (>= 85%)
+        run: uv run coverage report --include='src/importkit/domain/*' --fail-under=85
+
+  docker:
+    name: Docker image build + smoke test
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: importkit:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Smoke test
+        run: |
+          docker run -d --name importkit -p 3205:3205 importkit:ci
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3205/api/health; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:3205/api/health | grep -q '"status":"ok"'
+          curl -fsS http://127.0.0.1:3205/ | grep -q 'Import workspace'
+          curl -fsS -X POST http://127.0.0.1:3205/api/imports/preview \
+            -H 'Content-Type: application/json' \
+            -d '{"csv":"name,email\nAvery Stone,avery@example.com"}' | grep -q '"validRows":1'
+          test "$(docker inspect -f '{{.Config.User}}' importkit)" = "importkit"
+      - name: Graceful shutdown
+        run: |
+          docker stop -t 15 importkit
+          test "$(docker inspect -f '{{.State.ExitCode}}' importkit)" = "0"
+      - if: failure()
+        run: docker logs importkit || true

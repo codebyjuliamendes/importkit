@@ -1,0 +1,23 @@
+services:
+  importkit:
+    build: .
+    image: importkit:local
+    ports:
+      - "3205:3205"
+    environment:
+      IMPORTKIT_CORS_ORIGINS: ${IMPORTKIT_CORS_ORIGINS:-}
+      IMPORTKIT_FRAME_ANCESTORS: ${IMPORTKIT_FRAME_ANCESTORS:-'self'}
+      IMPORTKIT_LOG_LEVEL: ${IMPORTKIT_LOG_LEVEL:-INFO}
+    volumes:
+      - importkit-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    stop_grace_period: 15s
+    restart: unless-stopped
+
+volumes:
+  importkit-data:
